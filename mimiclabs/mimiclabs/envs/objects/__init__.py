@@ -11,6 +11,7 @@ from .libero_objects import *
 from .mimicgen_objects import *
 from .objaverse_objects import *
 from .primitive_objects import *
+from .generated_objects import *
 
 try:
     from .robocasa_objects import *
