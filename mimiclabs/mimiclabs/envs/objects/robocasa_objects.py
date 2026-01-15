@@ -41,7 +41,7 @@ class RobocasaObject(MujocoXMLObject):
         self.category_name = "_".join(
             re.sub(r"([A-Z])", r" \1", self.__class__.__name__).split()
         ).lower()
-        self.rotation = (0, 0)
+        self.rotation = None
         self.rotation_axis = "x"
 
         articulation_object_properties = {
