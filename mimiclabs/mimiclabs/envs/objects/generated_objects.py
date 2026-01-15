@@ -1,4 +1,5 @@
 import numpy as np
+import xml.etree.ElementTree as ET
 
 from robosuite.models.objects import CompositeObject
 from robosuite.utils.mjcf_utils import add_to_dict
@@ -56,6 +57,9 @@ class Bin(CompositeObject):
         # Create dictionary of values to create geoms for composite object and run super init
         super().__init__(**self._get_geom_attrs())
 
+        # Add contain_region site to object
+        self._add_contain_region_site()
+
         # Define materials we want to use for this object
         tex_attrib = {
             "type": "cube",
@@ -79,6 +83,34 @@ class Bin(CompositeObject):
         self.rotation = (0.0, 0.0)
         self.rotation_axis = "x"
         self.object_properties = {"vis_site_names": {}}
+
+    def _add_contain_region_site(self):
+        """
+        Adds a contain_region site to the bin object.
+        This site represents the usable volume inside the bin walls.
+        """
+        _obj = self.get_obj()
+
+        # Calculate contain region size (inside the walls)
+        contain_size_x = (self.bin_size[0] - 2 * self.wall_thickness) / 2
+        contain_size_y = (self.bin_size[1] - 2 * self.wall_thickness) / 2
+        contain_size_z = (self.bin_size[2] - self.wall_thickness) / 2
+
+        # Position is centered horizontally and vertically above the base
+        contain_pos_z = self.wall_thickness / 2
+
+        site_str = f"<site \
+            name='{self.name}_contain_region' \
+            type='box' \
+            pos='0 0 {contain_pos_z}' \
+            quat='1 0 0 0' \
+            size='{contain_size_x} {contain_size_y} {contain_size_z}' \
+            rgba='0.8 0 0 0' \
+            group='0' \
+            />"
+        site_obj = ET.fromstring(site_str)
+        # Append site to root object
+        _obj.append(site_obj)
 
     def _get_geom_attrs(self):
         """
