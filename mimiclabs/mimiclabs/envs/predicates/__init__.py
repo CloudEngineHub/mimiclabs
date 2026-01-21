@@ -13,6 +13,7 @@ VALIDATE_PREDICATE_FN_DICT = {
     "turnon": TurnOn(),
     "turnoff": TurnOff(),
     "grasp": Grasp(),
+    "still": Still()
 }
 
 

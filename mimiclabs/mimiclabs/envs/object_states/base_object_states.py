@@ -178,3 +178,8 @@ class ObjectState(BaseObjectState):
             object_geoms=self.env.get_object(self.object_name),
         )
         # NOTE(VS): need support to check grasps from multiple grippers in the future
+
+    def check_still(self):
+        this_object = self.env.get_object(self.object_name)
+        obj_vel = self.env.sim.data.get_body_xvelp(this_object.root_body)
+        return np.linalg.norm(obj_vel) < 1e-3

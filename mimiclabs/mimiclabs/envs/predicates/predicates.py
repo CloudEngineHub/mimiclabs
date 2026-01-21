@@ -7,3 +7,7 @@ with disable_module_import("libero", "libero", "envs"):
 class Grasp(UnaryAtomic):
     def __call__(self, arg1):
         return arg1.check_grasp()
+
+class Still(UnaryAtomic):
+    def __call__(self, arg1):
+        return arg1.check_still()
