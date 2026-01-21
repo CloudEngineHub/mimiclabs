@@ -11,6 +11,16 @@ with disable_module_import("libero", "libero", "envs"):
 import mimiclabs
 
 
+def custom_eval(val):
+    """Evaluate a value, handling boolean strings like 'true' and 'false'."""
+    if isinstance(val, str):
+        if val == "true":
+            return True
+        elif val == "false":
+            return False
+    return eval(val)
+
+
 def package_predicates(group, goals, name, part):
     if not isinstance(group, list):
         raise Exception("Error with " + name + part)
@@ -34,15 +44,15 @@ def get_textures(group):
             elif prop[0] == ":hsv":
                 vals_list = prop[1]
                 textures[obj_name]["hsv"] = [
-                    [eval(val) for val in vals] for vals in vals_list
+                    [custom_eval(val) for val in vals] for vals in vals_list
                 ]
                 # Hue range is [0,179], Saturation range is [0,255] and Value range is [0,255]
             elif prop[0] == ":turbulence":
                 # determines how quickly low freq noise is replaced by high freq noise
-                textures[obj_name]["turbulence"] = eval(prop[1])
+                textures[obj_name]["turbulence"] = custom_eval(prop[1])
             elif prop[0] == ":sigma":
                 # stddev of added noise
-                textures[obj_name]["sigma"] = eval(prop[1])
+                textures[obj_name]["sigma"] = custom_eval(prop[1])
             elif prop[0] == ":files":
                 files_list = prop[1]
                 textures[obj_name]["files"] = files_list
@@ -76,7 +86,7 @@ def get_camera_params(group):
         if subgrp[0] == ":ranges":
             for cam_range in subgrp[1]:
                 # ranges in spherical coordinates (physics convention)
-                camera["ranges"].append([eval(val) for val in cam_range])
+                camera["ranges"].append([custom_eval(val) for val in cam_range])
         elif subgrp[0] == ":jitter_mode":
             camera["jitter_mode"] = subgrp[1]
             assert camera["jitter_mode"] in [
@@ -92,7 +102,7 @@ def get_camera_params(group):
         elif subgrp[0] == ":look_at":
             # look_at can be either a string (object/fixture name) or a list of floats (position)
             if isinstance(subgrp[1], list):
-                camera["look_at"] = [eval(val) for val in subgrp[1]]
+                camera["look_at"] = [custom_eval(val) for val in subgrp[1]]
             else:
                 camera["look_at"] = subgrp[1]
         elif subgrp[0] == ":intrinsics":
@@ -104,10 +114,10 @@ def get_camera_params(group):
 
                 if isinstance(param_value, list):
                     # principal is a tuple/list of 2 values
-                    intrinsics[param_name] = [eval(val) for val in param_value]
+                    intrinsics[param_name] = [custom_eval(val) for val in param_value]
                 else:
                     # fovx and fovy are single values
-                    intrinsics[param_name] = eval(param_value)
+                    intrinsics[param_name] = custom_eval(param_value)
 
             # Assert only fovy and principal are present
             unexpected_keys = set(intrinsics.keys()) - {"fovy", "principal"}
@@ -128,10 +138,10 @@ def get_table_params(group):
 
         # If param_value is a list, evaluate each element
         if isinstance(param_value, list):
-            table_params[param_name] = [eval(val) for val in param_value]
+            table_params[param_name] = [custom_eval(val) for val in param_value]
         else:
             # Single value, evaluate it
-            table_params[param_name] = eval(param_value)
+            table_params[param_name] = custom_eval(param_value)
     return table_params
 
 
@@ -153,10 +163,12 @@ def get_object_params(group):
 
             # If param_value is a list, evaluate each element
             if isinstance(param_value, list):
-                object_params[obj_name][param_name] = [eval(val) for val in param_value]
+                object_params[obj_name][param_name] = [
+                    custom_eval(val) for val in param_value
+                ]
             else:
                 # Single value, evaluate it
-                object_params[obj_name][param_name] = eval(param_value)
+                object_params[obj_name][param_name] = custom_eval(param_value)
 
     return object_params
 
@@ -226,7 +238,9 @@ def robosuite_parse_problem(problem_filename):
                         # position of light source pointing at the origin
                         # ranges in spherical coordinates (physics convention)
                         for src_range in subgrp[1]:
-                            lighting["source"].append([eval(val) for val in src_range])
+                            lighting["source"].append(
+                                [custom_eval(val) for val in src_range]
+                            )
             elif t == ":obj_of_interest":
                 group.pop(0)
                 while group:
