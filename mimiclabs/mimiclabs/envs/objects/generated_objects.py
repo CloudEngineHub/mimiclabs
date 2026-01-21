@@ -387,7 +387,7 @@ class MugTree(CompositeObject):
             pos='{hang_pos_x} {hang_pos_y} {hang_pos_z}' \
             quat='1 0 0 0' \
             size='{hang_size_x} {hang_size_y} {hang_size_z}' \
-            rgba='0 0.8 0 0.3' \
+            rgba='0 0.8 0 0.0' \
             group='0' \
             />"
         site_obj = ET.fromstring(site_str)
