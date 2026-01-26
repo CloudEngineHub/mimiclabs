@@ -145,37 +145,75 @@ class MimicLabs_Tabletop_Manipulation_Base(BDDLBaseDomain):
         Check if the goal is achieved. Consider conjunction goals at the moment
         """
         goal_conj = self.parsed_problem["goal_state"][0]
-        goal_state = self.parsed_problem["goal_state"][1:]
-        if goal_conj == "and":
-            result = True
-            for state in goal_state:
-                result = self._eval_predicate(state) and result
-        elif goal_conj == "or":
-            result = False
-            for state in goal_state:
-                result = self._eval_predicate(state) or result
-        else:
+        if goal_conj not in ["and", "or"]:
             raise ValueError(f"Unsupported goal conjunction {goal_conj}.")
-        return result
+        return self._eval_state_recursive(self.parsed_problem["goal_state"])
+
+    def _eval_state_recursive(self, state):
+        """
+        Recursively evaluate a state predicate, handling nested conjunctions.
+
+        Args:
+            state: A state predicate which can be:
+                   - A conjunction: ["and", sub_state1, sub_state2, ...]
+                   - A disjunction: ["or", sub_state1, sub_state2, ...]
+                   - A base predicate: [predicate_name, obj1, obj2] or [predicate_name, obj1]
+
+        Returns:
+            Boolean result of the evaluation
+        """
+        if not state or len(state) == 0:
+            return True
+
+        # Check if the first element is a conjunction
+        if state[0] in ["and", "or"]:
+            conj = state[0]
+            sub_states = state[1:]
+
+            if conj == "and":
+                result = True
+                for sub_state in sub_states:
+                    result = self._eval_state_recursive(sub_state) and result
+            elif conj == "or":
+                result = False
+                for sub_state in sub_states:
+                    result = self._eval_state_recursive(sub_state) or result
+
+            return result
+        else:
+            # Base case: evaluate the predicate directly
+            return self._eval_predicate(state)
 
     def _eval_predicate(self, state):
+        predicate_fn_name = state[0]
+
+        # Handle negation - e.g., "!grasp", "!in", etc.
+        negate = False
+        if predicate_fn_name.startswith("!"):
+            predicate_fn_name = predicate_fn_name[1:]
+            negate = True
+
         if len(state) == 3:
             # Checking binary logical predicates
-            predicate_fn_name = state[0]
+            # predicate_fn_name = state[0]
             object_1_name = state[1]
             object_2_name = state[2]
-            return eval_predicate_fn(
+            result = eval_predicate_fn(
                 predicate_fn_name,
                 self.object_states_dict[object_1_name],
                 self.object_states_dict[object_2_name],
             )
         elif len(state) == 2:
             # Checking unary logical predicates
-            predicate_fn_name = state[0]
+            # predicate_fn_name = state[0]
             object_name = state[1]
-            return eval_predicate_fn(
+            result = eval_predicate_fn(
                 predicate_fn_name, self.object_states_dict[object_name]
             )
+
+        if negate:
+            return not result
+        return result
 
     def _setup_references(self):
         super()._setup_references()
